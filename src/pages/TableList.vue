@@ -3,113 +3,160 @@
     <div class="container-fluid">
       <div class="row">
         <div class="col-12">
-          <card class="strpied-tabled-with-hover"
-                body-classes="table-full-width table-responsive"
-          >
+          <card class="strpied-tabled-with-hover" body-classes="table-full-width table-responsive">
             <template slot="header">
-              <h4 class="card-title">Striped Table with Hover</h4>
-              <p class="card-category">Here is a subtitle for this table</p>
+              <h4 class="card-title">Tabla de Ropa</h4>
+              <p class="card-category">Lista de artículos de ropa</p>
             </template>
             <l-table class="table-hover table-striped"
                      :columns="table1.columns"
-                     :data="table1.data">
+                     :data="table1.data"
+                     @edit="openEditModal">
             </l-table>
+            <button class="btn btn-primary" @click="openEditModal(null)">Añadir Ropa</button>
           </card>
-
         </div>
 
-        <div class="col-12">
-          <card class="card-plain">
-            <template slot="header">
-              <h4 class="card-title">Table on Plain Background</h4>
-              <p class="card-category">Here is a subtitle for this table</p>
-            </template>
-            <div class="table-responsive">
-              <l-table class="table-hover"
-                       :columns="table2.columns"
-                       :data="table2.data">
-              </l-table>
+        <div v-if="isModalOpen" class="modal fade show" style="display: block;">
+          <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+              <div class="modal-header">
+                <h5 class="modal-title">Editar Ropa</h5>
+                <button type="button" class="close" @click="closeEditModal">&times;</button>
+              </div>
+              <div class="modal-body">
+                <div class="form-group">
+                  <label>ID</label>
+                  <input type="text" class="form-control" v-model="editItem.id" disabled />
+                </div>
+                <div class="form-group">
+                  <label>Nombre</label>
+                  <input type="text" class="form-control" v-model="editItem.nombre" />
+                </div>
+                <div class="form-group">
+                  <label>Marca</label>
+                  <input type="text" class="form-control" v-model="editItem.marca" />
+                </div>
+                <div class="form-group">
+                  <label>Talla</label>
+                  <input type="text" class="form-control" v-model="editItem.talla" />
+                </div>
+                <div class="form-group">
+                  <label>Color</label>
+                  <input type="text" class="form-control" v-model="editItem.color" />
+                </div>
+                <div class="form-group">
+                  <label>Precio</label>
+                  <input type="number" class="form-control" v-model="editItem.precio" />
+                </div>
+                <div class="form-group">
+                  <label>Existencia</label>
+                  <input type="number" class="form-control" v-model="editItem.existencia" />
+                </div>
+              </div>
+              <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" @click="closeEditModal">Cerrar</button>
+                <button type="button" class="btn btn-primary" @click="updateItem">Actualizar</button>
+              </div>
             </div>
-          </card>
+          </div>
         </div>
 
-        <div class="col-12">
-          <card class="strpied-tabled-with-hover"
-                body-classes="table-full-width table-responsive"
-          >
-            <template slot="header">
-              <h4 class="card-title">Small table</h4>
-              <p class="card-category">Here is a subtitle for this table</p>
-            </template>
-            <l-table class="table-hover table-striped table-sm"
-                     :columns="table1.columns"
-                     :data="table1.data">
-            </l-table>
-          </card>
-
-        </div>
-
+        <div v-if="isModalOpen" class="modal-backdrop fade show"></div>
       </div>
     </div>
   </div>
 </template>
+
 <script>
-  import LTable from 'src/components/Table.vue'
-  import Card from 'src/components/Cards/Card.vue'
-  const tableColumns = ['Id', 'Name', 'Salary', 'Country', 'City']
-  const tableData = [{
-    id: 1,
-    name: 'Dakota Rice',
-    salary: '$36.738',
-    country: 'Niger',
-    city: 'Oud-Turnhout'
+import axios from 'axios';
+import LTable from 'src/components/Table.vue';
+import Card from 'src/components/Cards/Card.vue';
+
+const tableColumns = ['ID', 'Nombre', 'Marca', 'Talla', 'Color', 'Precio', 'Existencia'];
+
+export default {
+  components: {
+    LTable,
+    Card
   },
-  {
-    id: 2,
-    name: 'Minerva Hooper',
-    salary: '$23,789',
-    country: 'Curaçao',
-    city: 'Sinaai-Waas'
+  data() {
+    return {
+      table1: {
+        columns: [...tableColumns],
+        data: []
+      },
+      isModalOpen: false,
+      editItem: {
+        id: '',
+        nombre: '',
+        marca: '',
+        talla: '',
+        color: '',
+        precio: '',
+        existencia: ''
+      }
+    };
   },
-  {
-    id: 3,
-    name: 'Sage Rodriguez',
-    salary: '$56,142',
-    country: 'Netherlands',
-    city: 'Baileux'
+  mounted() {
+    this.fetchData();
   },
-  {
-    id: 4,
-    name: 'Philip Chaney',
-    salary: '$38,735',
-    country: 'Korea, South',
-    city: 'Overland Park'
-  },
-  {
-    id: 5,
-    name: 'Doris Greene',
-    salary: '$63,542',
-    country: 'Malawi',
-    city: 'Feldkirchen in Kärnten'
-  }]
-  export default {
-    components: {
-      LTable,
-      Card
+  methods: {
+    async fetchData() {
+      try {
+        const response = await axios.get('http://localhost:8000/ropas');
+        this.table1.data = response.data;
+      } catch (error) {
+        console.error('Error al obtener los datos:', error);
+      }
     },
-    data () {
-      return {
-        table1: {
-          columns: [...tableColumns],
-          data: [...tableData]
-        },
-        table2: {
-          columns: [...tableColumns],
-          data: [...tableData]
-        }
+    openEditModal(item) {
+      if (item) {
+        this.editItem = { ...item };
+      } else {
+        this.editItem = {
+          id: '',
+          nombre: '',
+          marca: '',
+          talla: '',
+          color: '',
+          precio: '',
+          existencia: ''
+        };
+      }
+      this.isModalOpen = true;
+    },
+    closeEditModal() {
+      this.isModalOpen = false;
+    },
+    async updateItem() {
+      try {
+        await axios.put(`http://localhost:8000/ropaupdate/${this.editItem.id}`, this.editItem);
+        this.closeEditModal();
+        this.fetchData();
+      } catch (error) {
+        console.error('Error al actualizar los datos:', error);
       }
     }
   }
+}
 </script>
+
 <style>
+.modal {
+  display: none;
+  position: center;
+}
+.modal.show {
+  display: block;
+  position: center;
+}
+.modal-backdrop {
+  position: center;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+}
 </style>
